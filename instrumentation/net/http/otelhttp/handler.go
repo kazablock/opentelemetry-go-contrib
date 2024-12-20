@@ -15,6 +15,7 @@
 package otelhttp // import "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -233,6 +234,8 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 	if statusCode > 0 {
 		attributes = append(attributes, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
 	}
+	fmt.Printf("statusCode %d\n", statusCode)
+	fmt.Printf("category %d\n", statusCode/100)
 	if statusCode/100 != 4 {
 		span.SetStatus(semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(statusCode, trace.SpanKindServer))
 	}
