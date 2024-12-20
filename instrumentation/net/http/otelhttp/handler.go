@@ -16,6 +16,7 @@ package otelhttp // import "go.opentelemetry.io/contrib/instrumentation/net/http
 
 import (
 	"fmt"
+	"go.opentelemetry.io/otel/codes"
 	"io"
 	"net/http"
 	"time"
@@ -240,9 +241,9 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 		span.SetStatus(semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(statusCode, trace.SpanKindServer))
 	}
 	if statusCode/100 == 4 {
-		//span.SetStatus(codes.Error, "Error")
+		span.SetStatus(codes.Error, "Error")
 		//span.SetAttributes(attribute.String("event.outcome", "unknown"))
-		attributes = append(attributes, attribute.Key("event.outcome").String("failure"))
+		//attributes = append(attributes, attribute.Key("event.outcome").String("failure"))
 	}
 
 	if werr != nil && werr != io.EOF {
