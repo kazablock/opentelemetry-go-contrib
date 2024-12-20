@@ -241,7 +241,7 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 		span.SetStatus(semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(statusCode, trace.SpanKindServer))
 	}
 	if statusCode/100 == 4 {
-		span.SetStatus(codes.Unset, "")
+		span.SetStatus(codes.Error, "Error")
 	}
 
 	if werr != nil && werr != io.EOF {
