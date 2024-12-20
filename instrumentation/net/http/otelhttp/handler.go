@@ -16,7 +16,6 @@ package otelhttp // import "go.opentelemetry.io/contrib/instrumentation/net/http
 
 import (
 	"fmt"
-	"go.opentelemetry.io/otel/codes"
 	"io"
 	"net/http"
 	"time"
