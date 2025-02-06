@@ -234,7 +234,6 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 	if werr != nil && werr != io.EOF {
 		attributes = append(attributes, WriteErrorKey.String(werr.Error()))
 	}
-
 	if statusCode > 0 {
 		attributes = append(attributes, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
 	}
@@ -247,12 +246,7 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 			span.SetStatus(codes.Error, "Error")
 		default:
 			// Otherwise use standard HTTP -> OTel status mapping
-			span.SetStatus(
-				semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(
-					statusCode,
-					trace.SpanKindServer,
-				),
-			)
+			span.SetStatus(semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(statusCode, trace.SpanKindServer))
 		}
 	}
 }
