@@ -15,7 +15,6 @@
 package otelhttp // import "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 import (
-	"fmt"
 	"go.opentelemetry.io/otel/codes"
 	"io"
 	"net/http"
@@ -219,7 +218,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int, rerr, werr error) {
-	attributes := []attribute.KeyValue{}
+	var attributes []attribute.KeyValue
 
 	// TODO: Consider adding an event after each read and write, possibly as an
 	// option (defaulting to off), so as to not create needlessly verbose spans.
@@ -232,24 +231,30 @@ func setAfterServeAttributes(span trace.Span, read, wrote int64, statusCode int,
 	if wrote > 0 {
 		attributes = append(attributes, WroteBytesKey.Int64(wrote))
 	}
-	if statusCode > 0 {
-		attributes = append(attributes, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
-	}
-	fmt.Printf("statusCode %d\n", statusCode)
-	fmt.Printf("category %d\n", statusCode/100)
-	if statusCode/100 != 4 {
-		span.SetStatus(semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(statusCode, trace.SpanKindServer))
-	}
-	if statusCode/100 == 4 {
-		span.SetStatus(codes.Error, "Error")
-		//span.SetAttributes(attribute.String("event.outcome", "unknown"))
-		//attributes = append(attributes, attribute.Key("event.outcome").String("failure"))
-	}
-
 	if werr != nil && werr != io.EOF {
 		attributes = append(attributes, WriteErrorKey.String(werr.Error()))
 	}
+
+	if statusCode > 0 {
+		attributes = append(attributes, semconv.HTTPAttributesFromHTTPStatusCode(statusCode)...)
+	}
 	span.SetAttributes(attributes...)
+	if statusCode > 0 {
+		category := statusCode / 100
+		switch category {
+		case 4:
+			// If it's a 4xx error, set span status to error
+			span.SetStatus(codes.Error, "Error")
+		default:
+			// Otherwise use standard HTTP -> OTel status mapping
+			span.SetStatus(
+				semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(
+					statusCode,
+					trace.SpanKindServer,
+				),
+			)
+		}
+	}
 }
 
 // WithRouteTag annotates a span with the provided route name using the
